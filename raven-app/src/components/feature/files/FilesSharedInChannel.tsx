@@ -13,6 +13,7 @@ import { FileMessage } from "../../../types/Messaging/Message";
 type ChannelFile = {
     name: string,
     file: string,
+    file_thumbnail: string,
     owner: string,
     creation: string,
     message_type: 'File' | 'Image'
@@ -52,7 +53,7 @@ export const FilesSharedInChannel = () => {
                                     <HStack spacing={3}>
                                         <Center maxW='50px'>
                                             {f.message_type === 'File' && <Icon as={getFileExtensionIcon(getFileExtension(f.file))} boxSize="9" />}
-                                            {f.message_type === 'Image' && <Image src={f.file} alt='File preview' boxSize={'36px'} rounded='md' fit='cover' />}
+                                            {f.message_type === 'Image' && <Image src={f.file_thumbnail ?? f.file} alt='File preview' boxSize={'36px'} rounded='md' fit='cover' />}
                                         </Center>
                                         <Stack spacing={0}>
                                             <Text fontSize='sm' as={Link} href={f.file} isExternal>{getFileName(f.file)}</Text>
@@ -90,7 +91,7 @@ export const FilesSharedInChannel = () => {
                     Show more
                 </Button>
             }
-            <GlobalSearch isOpen={isGlobalSearchModalOpen} onClose={onGlobalSearchModalClose} tabIndex={1} input={""} />
+            <GlobalSearch isOpen={isGlobalSearchModalOpen} onClose={onGlobalSearchModalClose} onCommandPaletteClose={onGlobalSearchModalClose} tabIndex={1} input={""} />
         </Stack>
     )
 }

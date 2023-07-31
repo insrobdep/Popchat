@@ -94,7 +94,7 @@ export const MessageSearch = ({ onToggleMyChannels, isOpenMyChannels, dateOption
         if (users) {
             return Object.values(users).map((user: User) => ({
                 value: user.name,
-                label: <HStack><Avatar name={user.full_name} src={url + user.user_image} borderRadius={'md'} size="xs" /><Text>{user.full_name}</Text></HStack>
+                label: <HStack><Avatar key={user.name} name={user.full_name} src={url + user.user_image} borderRadius={'md'} size="xs" /><Text>{user.full_name}</Text></HStack>
             }))
         } else {
             return []

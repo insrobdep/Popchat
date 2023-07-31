@@ -208,7 +208,7 @@ export const FileSearch = ({ onToggleMyChannels, isOpenMyChannels, dateOption, i
                                             <HStack spacing={3} key={f.name}>
                                                 <Center maxW='50px'>
                                                     {f.message_type === 'File' && <Icon as={getFileExtensionIcon(getFileExtension(f.file))} boxSize="9" />}
-                                                    {f.message_type === 'Image' && <Image src={f.file} alt='File preview' boxSize={'36px'} rounded='md' fit='cover' />}
+                                                    {f.message_type === 'Image' && <Image src={f.file_thumbnail ?? f.file} alt='File preview' boxSize={'36px'} rounded='md' fit='cover' />}
                                                 </Center>
                                                 <Stack spacing={0}>
                                                     {f.file && <Text fontSize='sm' as={Link} href={f.file} isExternal>{getFileName(f.file)}</Text>}

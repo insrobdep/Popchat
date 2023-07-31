@@ -169,7 +169,7 @@ export const Files = ({ searchChange, input, isGlobalSearchModalOpen, onGlobalSe
                 ><HStack spacing={3}>
                         <Center maxW='50px'>
                             {f.message_type === 'File' && <Icon as={getFileExtensionIcon(getFileExtension(f.file))} boxSize="6" />}
-                            {f.message_type === 'Image' && <Image src={f.file} alt='File preview' boxSize={6} rounded='md' fit='cover' />}
+                            {f.message_type === 'Image' && <Image src={f.file_thumbnail ?? f.file} alt='File preview' boxSize={6} rounded='md' fit='cover' />}
                         </Center>
                         <Stack spacing={0}>
                             {f.file && <Link fontSize='sm' href={f.file} isExternal>{getFileName(f.file)}</Link>}

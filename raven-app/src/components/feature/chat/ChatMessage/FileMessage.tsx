@@ -6,10 +6,10 @@ import { BsFillCaretDownFill, BsFillCaretRightFill } from "react-icons/bs"
 import { getFileExtension, getFileName } from "../../../../utils/operations"
 
 interface FileMessageProps extends FileMessage {
-    onFilePreviewModalOpen: ({ file, owner, creation, message_type }: Partial<FileMessage>) => void
+    onFilePreviewModalOpen: ({ file, file_thumbnail, owner, creation, message_type }: Partial<FileMessage>) => void
 }
 
-export const FileMessageBlock = ({ file, owner, creation, message_type, onFilePreviewModalOpen }: FileMessageProps) => {
+export const FileMessageBlock = ({ file, file_thumbnail, owner, creation, message_type, onFilePreviewModalOpen }: FileMessageProps) => {
 
     const [showImage, { toggle }] = useBoolean(true)
 
@@ -49,7 +49,7 @@ export const FileMessageBlock = ({ file, owner, creation, message_type, onFilePr
                         icon={showImage ? <BsFillCaretDownFill fontSize={'0.6rem'} /> : <BsFillCaretRightFill fontSize={'0.6rem'} />} />
                 </HStack>
                 <Collapse in={showImage} animateOpacity>
-                    <Image src={file} height='360px' rounded={'md'}
+                    <Image src={file_thumbnail ?? file} height='360px' rounded={'md'}
                         onClick={openFile}
                         _hover={{ cursor: 'pointer' }} objectFit='cover' />
                 </Collapse>

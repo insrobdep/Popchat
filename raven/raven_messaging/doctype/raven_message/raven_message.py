@@ -17,6 +17,8 @@ class RavenMessage(Document):
     def on_update(self):
         frappe.publish_realtime('message_updated', {
             'channel_id': self.channel_id}, after_commit=True)
+        if self.message_type == 'Image':
+            print("THUMBNAIL!!", self.file_thumbnail)
         frappe.db.commit()
 
     def on_trash(self):

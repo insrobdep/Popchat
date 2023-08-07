@@ -15,10 +15,27 @@ class RavenMessage(Document):
         frappe.db.commit()
 
     def on_update(self):
+
+        print("file name", self.file)
+
+        file = frappe.get_last_doc('File', filters={
+            "file_url": self.file
+        }
+        )
+
+        print("file", file)
+
+        if file:
+            if not file.thumbnail_url:
+                print("thumbnail not found")
+                file.make_thumbnail()
+
+            self.file_thumbnail = file.thumbnail_url
+
+        print("thumbnail!", file.thumbnail_url)
+        print("thumbnail!", self.file_thumbnail)
         frappe.publish_realtime('message_updated', {
             'channel_id': self.channel_id}, after_commit=True)
-        if self.message_type == 'Image':
-            print("THUMBNAIL!!", self.file_thumbnail)
         frappe.db.commit()
 
     def on_trash(self):

@@ -1,8 +1,9 @@
 import { Select, ChakraStylesConfig, OptionBase, Props, GroupBase } from 'chakra-react-select'
 import { Controller, useFormContext } from 'react-hook-form'
-import { useFrappeGetDocList } from 'frappe-react-sdk'
+import { useFrappeGetCall } from 'frappe-react-sdk'
 import { useMemo } from 'react'
 import { generateColorHsl } from './GenerateAvatarColor'
+import { User } from '../../../types/User/User'
 
 export interface MemberOption extends OptionBase {
     value: string
@@ -18,15 +19,13 @@ interface Member {
 
 export const AddMembersDropdown = ({ name, chakraStyles, ...props }: Props<MemberOption, true, GroupBase<MemberOption>>) => {
 
-    const { data } = useFrappeGetDocList<{ name: string, user_image: string, full_name: string }>('User', {
-        fields: ["name", "user_image", "full_name"]
-    }, undefined, {
+    const { data: users, error: usersError } = useFrappeGetCall<{ message: User[] }>('raven.raven_channel_management.doctype.raven_channel.raven_channel.get_raven_users_list', undefined, undefined, {
         revalidateOnFocus: false
     })
 
     const memberOptions: MemberOption[] = useMemo(() => {
-        if (data) {
-            return data.map((m: Member) => ({
+        if (users?.message) {
+            return users.message.map((m: Member) => ({
                 value: m.name,
                 label: m.full_name,
                 image: m.user_image
@@ -34,7 +33,7 @@ export const AddMembersDropdown = ({ name, chakraStyles, ...props }: Props<Membe
         } else {
             return []
         }
-    }, [data])
+    }, [users?.message])
 
     const { control } = useFormContext()
 

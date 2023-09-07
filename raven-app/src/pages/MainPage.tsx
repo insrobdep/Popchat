@@ -1,7 +1,6 @@
 import { Flex, Box, useColorModeValue } from '@chakra-ui/react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from '../components/layout/Sidebar/Sidebar'
-import { VirtuosoRefProvider } from '../utils/message/VirtuosoRefProvider'
 import { useActiveState } from '../hooks/useActiveState'
 import { ChannelListProvider } from '../utils/channel/ChannelListProvider'
 import { UserListProvider } from '@/utils/users/UserListProvider'
@@ -28,9 +27,7 @@ export const MainPage = () => {
                             w='calc(100vw - var(--sidebar-width))'
                             position="relative"
                             left='var(--sidebar-width)'>
-                            <VirtuosoRefProvider>
-                                <Outlet />
-                            </VirtuosoRefProvider>
+                            <Outlet />
                         </Box>
                     </Flex>
                 </ActiveUsersProvider>

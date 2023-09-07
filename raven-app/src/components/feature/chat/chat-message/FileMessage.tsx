@@ -6,7 +6,7 @@ import { BsFillCaretDownFill, BsFillCaretRightFill } from "react-icons/bs"
 import { getFileExtension, getFileName } from "../../../../utils/operations"
 
 interface FileMessageProps extends Partial<FileMessage> {
-    onFilePreviewModalOpen: ({ file, owner, creation, message_type }: Partial<FileMessage>) => void
+    onFilePreviewModalOpen: (message: Partial<FileMessage>) => void
 }
 
 export const FileMessageBlock = ({ file, owner, creation, message_type, onFilePreviewModalOpen }: FileMessageProps) => {
@@ -51,6 +51,7 @@ export const FileMessageBlock = ({ file, owner, creation, message_type, onFilePr
                 <Collapse in={showImage} animateOpacity>
                     <Image src={file} height='360px' rounded={'md'}
                         onClick={openFile}
+                        loading="lazy"
                         _hover={{ cursor: 'pointer' }} objectFit='cover' />
                 </Collapse>
             </Stack>

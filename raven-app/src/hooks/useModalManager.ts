@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useCallback, useState } from "react"
 
 /**
  * Hook to manage modals
@@ -40,23 +40,23 @@ export const useModalManager = (): ModalManager => {
     const [modalType, setModalType] = useState(ModalTypes.None)
     const [modalContent, setModalContent] = useState(null)
 
-    const openModal = (type: ModalTypes, content?: any) => {
+    const openModal = useCallback((type: ModalTypes, content?: any) => {
         setModalType(type)
         setModalContent(content)
-    }
+    }, [])
 
-    const closeModal = () => {
+    const closeModal = useCallback(() => {
         setModalType(ModalTypes.None)
         setModalContent(null)
-    }
+    }, [])
 
-    const toggleModal = (type: ModalTypes, content?: any) => {
+    const toggleModal = useCallback((type: ModalTypes, content?: any) => {
         if (modalType === type) {
             closeModal()
         } else {
             openModal(type, content)
         }
-    }
+    }, [openModal, closeModal, modalType])
 
     return { modalType, modalContent, openModal, closeModal, toggleModal }
 }

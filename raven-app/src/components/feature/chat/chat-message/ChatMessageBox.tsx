@@ -1,5 +1,5 @@
-import { Avatar, Box, BoxProps, HStack, Stack, useColorMode } from "@chakra-ui/react"
-import { useCallback, useState } from "react"
+import { Avatar, Box, BoxProps, HStack, Stack, useBoolean, useColorMode, useColorModeValue } from "@chakra-ui/react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { ActionsPalette } from "../../message-action-palette/ActionsPalette"
 import { MessageReactions } from "./MessageReactions"
 import { Message, MessageBlock } from "../../../../../../types/Messaging/Message"
@@ -9,10 +9,11 @@ import { UserNameInMessage } from "./UserNameInMessage"
 import { ChannelListItem, DMChannelListItem } from "@/utils/channel/ChannelListProvider"
 import { useGetUserRecords } from "@/hooks/useGetUserRecords"
 import { useSWRConfig } from "frappe-react-sdk"
+import { useLocation } from "react-router-dom"
 
 interface ChatMessageBoxProps extends BoxProps {
     message: Message,
-    handleScroll?: (newState: boolean) => void,
+    handleScroll: (newState: boolean) => void,
     children?: React.ReactNode,
     handleScrollToMessage?: (name: string, channel: string, messages: MessageBlock[]) => void,
     replyToMessage?: (message: Message) => void
@@ -21,8 +22,10 @@ interface ChatMessageBoxProps extends BoxProps {
 
 export const ChatMessageBox = ({ message, handleScroll, children, handleScrollToMessage, replyToMessage, channelData, ...props }: ChatMessageBoxProps) => {
 
-    const { colorMode } = useColorMode()
-    const [showButtons, setShowButtons] = useState<{}>({ visibility: 'hidden' })
+    const { hash } = useLocation()
+
+    const hoverBackground = useColorModeValue('gray.50', 'gray.800')
+    const focusedBorder = useColorModeValue('yellow.400', 'gray.400')
     const { name, owner: user, creation: timestamp, message_reactions, is_continuation, is_reply, linked_message } = message
 
     const users = useGetUserRecords()
@@ -37,26 +40,25 @@ export const ChatMessageBox = ({ message, handleScroll, children, handleScrollTo
         <Box
             pt={is_continuation === 0 ? '2' : '1'}
             pb='1'
+            id={`message-${name}`}
+            className='message-block'
+            border={'1px solid'}
+            borderColor={hash === `#message-${name}` ? focusedBorder : 'transparent'}
             px='2'
+            role='group'
             zIndex={1}
             position={'relative'}
             _hover={{
-                bg: colorMode === 'light' && 'gray.50' || 'gray.800',
+                bg: hoverBackground,
                 borderRadius: 'md'
             }}
             rounded='md'
-            onMouseEnter={e => {
-                setShowButtons({ visibility: 'visible' })
-            }}
-            onMouseLeave={e => {
-                setShowButtons({ visibility: 'hidden' })
-            }}
             {...props}>
 
-            <HStack spacing={is_continuation === 0 ? 2 : 3.5} alignItems={is_continuation === 0 ? 'flex-start' : 'center'}>
+            <HStack spacing={2} alignItems={is_continuation === 0 ? 'flex-start' : 'center'}>
                 {is_continuation === 0 ?
-                    <Avatar name={users?.[user]?.full_name ?? user} src={users?.[user]?.user_image ?? ''} borderRadius={'md'} boxSize='36px' /> :
-                    <DateTooltipShort timestamp={timestamp} showButtons={showButtons} />
+                    <Avatar loading='lazy' name={users?.[user]?.full_name ?? user} src={users?.[user]?.user_image ?? ''} borderRadius={'md'} boxSize='36px' /> :
+                    <DateTooltipShort timestamp={timestamp} />
                 }
                 <Stack spacing='1' pt={is_continuation === 0 ? 0 : 0.5}>
                     {is_continuation === 0 && <UserNameInMessage timestamp={timestamp} user={user} />}
@@ -67,15 +69,15 @@ export const ChatMessageBox = ({ message, handleScroll, children, handleScrollTo
                     <MessageReactions message_reactions={message_reactions} name={name} updateMessages={updateMessages} />
                 </Stack>
             </HStack>
+            <Box visibility={'hidden'} _groupHover={{ visibility: 'visible' }} _hover={{ visibility: 'visible' }}>
+                <ActionsPalette
+                    message={message}
+                    handleScroll={handleScroll}
+                    is_continuation={is_continuation}
+                    replyToMessage={replyToMessage}
+                    updateMessages={updateMessages} />
+            </Box>
 
-            {message && handleScroll && <ActionsPalette
-                message={message}
-                showButtons={showButtons}
-                handleScroll={handleScroll}
-                is_continuation={is_continuation}
-                replyToMessage={replyToMessage}
-                updateMessages={updateMessages} />
-            }
 
         </Box>
     )

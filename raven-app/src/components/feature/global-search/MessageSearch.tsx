@@ -12,7 +12,6 @@ import { SelectInput, SelectOption } from '../search-filters/SelectInput'
 import { Sort } from '../sorting'
 import { useNavigate } from 'react-router-dom'
 import { MessageBox } from './MessageBox'
-import { VirtuosoRefContext } from '../../../utils/message/VirtuosoRefProvider'
 import { IoBookmark, IoBookmarkOutline } from 'react-icons/io5'
 import { scrollbarStyles } from '../../../styles'
 import { useGetUserRecords } from '@/hooks/useGetUserRecords'
@@ -54,9 +53,7 @@ export const MessageSearch = ({ onToggleMyChannels, isOpenMyChannels, onToggleSa
 
     const { colorMode } = useColorMode()
 
-    const { virtuosoRef } = useContext(VirtuosoRefContext)
     const navigate = useNavigate()
-    const { call, error: indexingError, loading, reset } = useFrappePostCall<{ message: string }>("raven.raven_messaging.doctype.raven_message.raven_message.get_index_of_message")
 
     const handleNavigateToChannel = (channelID: string, _callback: VoidFunction) => {
         onClose()
@@ -66,35 +63,15 @@ export const MessageSearch = ({ onToggleMyChannels, isOpenMyChannels, onToggleSa
     }
 
     const handleScrollToMessage = (messageName: string, channelID: string) => {
-        reset()
-        handleNavigateToChannel(channelID, async function () {
-            const result = await call({
-                channel_id: channelID,
-                message_id: messageName
-            })
-            if (virtuosoRef) {
-                virtuosoRef.current?.scrollToIndex({ index: parseInt(result.message) ?? 'LAST', align: 'center' })
-            }
-        })
+        onClose()
+        onCommandPaletteClose()
+        navigate(`/channel/${channelID}#message=${messageName}`)
+        // setTimeout(() => {
+        //     document.getElementById(`message-${messageName}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // }, 200)
+
     }
 
-    const toast = useToast()
-
-    if (indexingError && !toast.isActive('message-indexing-error')) {
-        toast({
-            description: "There was an error while indexing the message.",
-            status: "error",
-            duration: 4000,
-            size: 'sm',
-            render: ({ onClose }) => <AlertBanner onClose={onClose} variant='solid' status='error' fontSize="sm">
-                There was an error while indexing the message.<br />You have been redirected to the channel.
-            </AlertBanner>,
-            id: 'message-indexing-error',
-            variant: 'left-accent',
-            isClosable: true,
-            position: 'bottom-right'
-        })
-    }
 
     const users = useGetUserRecords()
 
@@ -260,7 +237,7 @@ export const MessageSearch = ({ onToggleMyChannels, isOpenMyChannels, onToggleSa
             </Stack>
             <Stack h='420px' p={4}>
                 {error ? <AlertBanner status='error' heading={error.message}>{error.httpStatus} - {error.httpStatusText}</AlertBanner> :
-                    ((isLoading && isValidating) || loading ? <Center><Spinner /></Center> :
+                    ((isLoading && isValidating) ? <Center><Spinner /></Center> :
                         (!!!error && data?.message && data.message.length > 0 && showResults ?
                             <><Sort
                                 sortingFields={[{ label: 'Created on', field: 'creation' }]}

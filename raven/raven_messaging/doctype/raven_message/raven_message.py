@@ -9,6 +9,23 @@ from frappe.query_builder import Case
 
 
 class RavenMessage(Document):
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
+
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from frappe.types import DF
+
+        channel_id: DF.Link
+        file: DF.Attach | None
+        file_thumbnail: DF.Attach | None
+        is_reply: DF.Check
+        linked_message: DF.Link | None
+        message_reactions: DF.JSON | None
+        message_type: DF.Literal['Text', 'Image', 'File']
+        text: DF.LongText | None
+    # end: auto-generated types
 
     def validate(self):
         '''
@@ -205,16 +222,6 @@ def get_messages_with_dates(channel_id):
     messages = get_messages(channel_id)
     track_visit(channel_id, True)
     return parse_messages(messages)
-
-
-@frappe.whitelist()
-def get_index_of_message(channel_id, message_id):
-    messages = get_messages(channel_id)
-    parsed_messages = parse_messages(messages)
-    for i in range(len(parsed_messages)):
-        if parsed_messages[i]['block_type'] == 'message' and parsed_messages[i]['data']['name'] == message_id:
-            return i
-    return -1
 
 
 @frappe.whitelist()

@@ -4,7 +4,7 @@ import { useFrappeEventListener, useFrappeGetCall } from "frappe-react-sdk"
 import { Message, MessagesWithDate } from "../../../../../../types/Messaging/Message"
 import { FullPageLoader } from "@/components/layout/Loaders"
 import { ErrorBanner } from "@/components/layout/AlertBanner"
-import { useContext, useMemo, useState } from "react"
+import { useCallback, useContext, useMemo, useState } from "react"
 import { ArchivedChannelBox } from "../chat-footer/ArchivedChannelBox"
 import { ChannelListItem, DMChannelListItem } from "@/utils/channel/ChannelListProvider"
 import { JoinChannelBox } from "../chat-footer/JoinChannelBox"
@@ -41,13 +41,9 @@ export const ChatBoxBody = ({ channelData }: ChatBoxBodyProps) => {
 
     const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
 
-    const handleReplyAction = (message: Message) => {
-        setSelectedMessage(message)
-    }
-
-    const handleCancelReply = () => {
+    const handleCancelReply = useCallback(() => {
         setSelectedMessage(null)
-    }
+    }, [])
 
     const isUserInChannel = useMemo(() => {
         if (user && channelMembers) {
@@ -55,9 +51,9 @@ export const ChatBoxBody = ({ channelData }: ChatBoxBodyProps) => {
         }
         return false
     }, [user, channelMembers])
-      
+
     if (isLoading) {
-        return <FullPageLoader />
+        return <FullPageLoader w='full' />
     }
 
     if (error) {
@@ -69,7 +65,7 @@ export const ChatBoxBody = ({ channelData }: ChatBoxBodyProps) => {
             <Stack h='calc(100vh)' justify={'flex-end'} p={4} overflow='hidden' pt='16'>
                 <ChatHistory
                     parsedMessages={data.message}
-                    replyToMessage={handleReplyAction}
+                    replyToMessage={setSelectedMessage}
                     channelData={channelData} />
                 {channelData?.is_archived == 0 && ((isUserInChannel || channelData?.type === 'Open') &&
                     <ChatInput
@@ -78,13 +74,15 @@ export const ChatBoxBody = ({ channelData }: ChatBoxBodyProps) => {
                         handleCancelReply={handleCancelReply}
                         channelData={channelData}
                         channelMembers={channelMembers} />)}
-                {channelData?.is_archived == 0 && (!isUserInChannel && channelData?.type !== 'Open' &&
-                    <JoinChannelBox
-                        channelData={channelData}
-                        channelMembers={channelMembers}
-                        user={user} />)}
+                {
+                    channelData?.is_archived == 0 && (!isUserInChannel && channelData?.type !== 'Open' &&
+                        <JoinChannelBox
+                            channelData={channelData}
+                            channelMembers={channelMembers}
+                            user={user} />)
+                }
                 {channelData && channelData.is_archived == 1 && <ArchivedChannelBox channelData={channelData} />}
-            </Stack>
+            </Stack >
         )
     }
 

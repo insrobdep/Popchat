@@ -2,16 +2,15 @@ import { Text, Box, HStack, Stack, useColorMode, Center, Image, Icon, IconButton
 import { Message } from '../../../../../../types/Messaging/Message'
 import { MarkdownRenderer } from '../../markdown-viewer/MarkdownRenderer'
 import { DateObjectToFormattedDateStringWithoutYear, DateObjectToTimeString, getFileExtension, getFileName } from '../../../../utils/operations'
-import { useContext } from 'react'
 import { getFileExtensionIcon } from '../../../../utils/layout/fileExtensionIcon'
 import { IoMdClose } from 'react-icons/io'
-import { useFrappeGetDoc, useFrappePostCall } from 'frappe-react-sdk'
+import { useFrappeGetDoc } from 'frappe-react-sdk'
 import { AlertBanner } from '../../../layout/AlertBanner'
-import { VirtuosoRefContext } from '../../../../utils/message/VirtuosoRefProvider'
-import { useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
 import { ChannelListItem, DMChannelListItem } from '@/utils/channel/ChannelListProvider'
 import { UserFields } from '@/utils/users/UserListProvider'
 import { useGetUserRecords } from '@/hooks/useGetUserRecords'
+import { RavenMessage } from '@/types/RavenMessaging/RavenMessage'
 
 interface PreviousMessageBoxProps {
     previous_message_id?: string,
@@ -77,7 +76,6 @@ export const PreviousMessageBox = ({ previous_message_id, previous_message_conte
 
     if (previous_message_id) return <PreviousMessageBoxInChat
         previous_message_id={previous_message_id}
-        channelData={channelData}
         users={users} />
 
     return null
@@ -85,45 +83,36 @@ export const PreviousMessageBox = ({ previous_message_id, previous_message_conte
 
 interface PreviousMessageBoxInChatProps {
     previous_message_id: string,
-    channelData: ChannelListItem | DMChannelListItem,
     users: Record<string, UserFields>
 }
 
-const PreviousMessageBoxInChat = ({ previous_message_id, channelData, users }: PreviousMessageBoxInChatProps) => {
+const PreviousMessageBoxInChat = ({ previous_message_id, users }: PreviousMessageBoxInChatProps) => {
 
     const { colorMode } = useColorMode()
-    const { data, error } = useFrappeGetDoc<Message>('Raven Message', previous_message_id)
-    const { virtuosoRef } = useContext(VirtuosoRefContext)
+    const { data, error } = useFrappeGetDoc<RavenMessage>('Raven Message', previous_message_id)
+
+    const { channelID } = useParams()
     const navigate = useNavigate()
+    const { hash } = useLocation()
 
-    const { call, error: indexingError, reset } = useFrappePostCall<{ message: string }>("raven.raven_messaging.doctype.raven_message.raven_message.get_index_of_message")
-
-    const handleNavigateToChannel = (channelID: string, _callback: VoidFunction) => {
-        navigate(`/channel/${channelID}`)
-        _callback()
-    }
-
-    const handleScrollToMessage = (messageName: string) => {
-        reset()
-        handleNavigateToChannel(channelData?.name ?? '', async function () {
-            const result = await call({
-                channel_id: channelData?.name,
-                message_id: messageName
-            })
-            if (virtuosoRef) {
-                virtuosoRef.current?.scrollToIndex({ index: parseInt(result.message) ?? 'LAST', align: 'center' })
+    const scrollToMessage = () => {
+        const channel = data?.channel_id
+        const messageID = data?.name
+        if (channel && messageID) {
+            const hashID = hash?.replace('#message-', '')
+            if (channelID === channel && hashID === messageID) {
+                document.getElementById(`message-${messageID}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            } else {
+                navigate(`/channel/${channel}#message-${messageID}`)
             }
-        })
+        }
     }
 
-    if (indexingError) {
-        return <AlertBanner status='error' heading='error while searching for previous message' />
-    }
     if (error) {
         return <AlertBanner status='error' heading='previous message not found, this message may have been deleted' />
     }
     if (data) {
-        return <LinkBox onClick={() => handleScrollToMessage(previous_message_id)} p='2' border={'1px'} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'} rounded={'md'} _hover={{ cursor: 'pointer', boxShadow: 'sm', bgColor: colorMode === 'light' ? 'white' : 'black' }}>
+        return <LinkBox onClick={scrollToMessage} p='2' border={'1px'} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'} rounded={'md'} _hover={{ cursor: 'pointer', boxShadow: 'sm', bgColor: colorMode === 'light' ? 'white' : 'black' }}>
             <Box pl='2' borderLeft={'2px'} borderLeftColor={colorMode === 'light' ? 'gray.600' : 'gray.600'}>
                 <Stack spacing={1}>
                     <HStack>
@@ -135,12 +124,12 @@ const PreviousMessageBoxInChat = ({ previous_message_id, channelData, users }: P
                         </HStack>
                     </HStack>
                     {/* message content */}
-                    {data.message_type === 'Text' &&
+                    {data.message_type === 'Text' && data.text &&
                         <HStack spacing={0}>
                             <Stack>
-                                <MarkdownRenderer content={data.text.slice(0, MAX_TRUNCATED_LENGTH)} />
+                                <MarkdownRenderer content={data.text?.slice(0, MAX_TRUNCATED_LENGTH) ?? ''} />
                             </Stack>
-                            {data.text.length > MAX_TRUNCATED_LENGTH && <Text as="span" fontSize="sm">...</Text>}
+                            {data.text?.length > MAX_TRUNCATED_LENGTH && <Text as="span" fontSize="sm">...</Text>}
                         </HStack>
                     }
                     {(data.message_type === 'Image' || data.message_type === 'File') &&
@@ -148,9 +137,9 @@ const PreviousMessageBoxInChat = ({ previous_message_id, channelData, users }: P
                             <Center maxW='50px'>
                                 {data.message_type === 'Image' ?
                                     <Image src={data.file} alt='File preview' boxSize={'30px'} rounded='md' /> :
-                                    <Icon as={getFileExtensionIcon(getFileExtension(data.file) ?? '')} boxSize="4" />}
+                                    <Icon as={getFileExtensionIcon(getFileExtension(data.file ?? '') ?? '')} boxSize="4" />}
                             </Center>
-                            <Text as="span" fontSize="sm" overflow="hidden" whiteSpace="nowrap" textOverflow="ellipsis">{getFileName(data.file)}</Text>
+                            <Text as="span" fontSize="sm" overflow="hidden" whiteSpace="nowrap" textOverflow="ellipsis">{getFileName(data.file ?? '')}</Text>
                         </HStack>
                     }
                 </Stack>

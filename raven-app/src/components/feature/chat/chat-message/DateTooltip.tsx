@@ -10,10 +10,10 @@ export const DateTooltip = ({ timestamp }: { timestamp: string }) => {
     )
 }
 
-export const DateTooltipShort = ({ timestamp, showButtons }: { timestamp: string, showButtons: {} }) => {
+export const DateTooltipShort = ({ timestamp }: { timestamp: string }) => {
     return (
         <Tooltip hasArrow label={`${DateObjectToFormattedDateStringWithoutYear(new Date(timestamp))} at ${DateObjectToTimeString(new Date(timestamp))}`} placement='top' rounded='md'>
-            <Text pl='1' style={showButtons} fontSize={'xs'} color="gray.500" _hover={{ textDecoration: 'underline' }}>{DateObjectToTimeString(new Date(timestamp)).split(' ')[0]}</Text>
+            <Text pl='1' _groupHover={{ 'visibility': 'visible' }} visibility={'hidden'} fontSize={'xs'} color="gray.500" _hover={{ textDecoration: 'underline' }}>{DateObjectToTimeString(new Date(timestamp)).split(' ')[0]}</Text>
         </Tooltip>
     )
 }

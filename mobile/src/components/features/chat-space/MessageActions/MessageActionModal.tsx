@@ -14,6 +14,7 @@ import { DeleteAction } from './DeleteAction';
 import { UserContext } from '@/utils/auth/UserProvider';
 import { CopyAction } from './CopyAction';
 import { SaveMessageAction } from './SaveMessageAction';
+import { DownloadAction } from './DownloadAction';
 
 interface MessageActionModalProps {
     selectedMessage?: MessageBlock,
@@ -47,10 +48,7 @@ export const MessageActionModal = ({ selectedMessage, onDismiss }: MessageAction
                             <DeleteAction message={selectedMessage} onSuccess={onDismiss} />
                         }
                         <CopyAction message={selectedMessage} onSuccess={onDismiss} />
-                        <IonItem className='py-1'>
-                            <IonIcon slot='start' icon={downloadOutline} />
-                            <IonLabel className='font-semibold'>Download</IonLabel>
-                        </IonItem>
+                        <DownloadAction message={selectedMessage} onSuccess={onDismiss} />
                         <SaveMessageAction message={selectedMessage} onSuccess={onDismiss} />
                         {/* <IonItem className='py-1'>
                             <IonIcon slot="start" icon={documentAttachOutline} />

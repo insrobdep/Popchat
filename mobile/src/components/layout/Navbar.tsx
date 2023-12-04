@@ -1,5 +1,5 @@
 import { IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from "@ionic/react"
-import { BiChat, BiHash, BiUser } from "react-icons/bi"
+import { BiBell, BiChat, BiHash, BiUser } from "react-icons/bi"
 import { Redirect, Route } from "react-router-dom"
 import { Channels } from "../../pages/channels"
 import { DirectMessageList } from "../../pages/direct-messages/DirectMessageList"
@@ -8,6 +8,7 @@ import { PropsWithChildren, useContext } from "react"
 import { UserContext } from "../../utils/auth/UserProvider"
 import { FullPageLoader } from "./loaders/FullPageLoader"
 import { Login } from "../../pages/auth"
+import { Notifications } from "@/pages/notifications/Notifications"
 
 export const Navbar = () => {
     const { currentUser, isLoading } = useContext(UserContext)
@@ -26,9 +27,9 @@ export const Navbar = () => {
             {/* <Route exact path="/:tab(search)">
                 <Search />
             </Route> */}
-            {/* <Route exact path="/:tab(notifications)">
+            <Route exact path="/:tab(notifications)">
                 <Notifications />
-            </Route> */}
+            </Route>
             <Route exact path="/:tab(profile)">
                 <ProtectedRoute>
                     <Profile />
@@ -48,10 +49,11 @@ export const Navbar = () => {
             </IonTabButton>
             {/* <IonTabButton tab="search" href="/search">
                 <BiSearch size={30} />
-            </IonTabButton>
+            </IonTabButton> */}
             <IonTabButton tab="notifications" href="/notifications">
                 <BiBell size={30} />
-            </IonTabButton> */}
+                <IonLabel className="font-semibold">Bell</IonLabel>
+            </IonTabButton>
             <IonTabButton tab="profile" href="/profile">
                 <IonIcon hidden />
                 <BiUser size={24} />

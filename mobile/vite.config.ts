@@ -12,6 +12,9 @@ export default defineConfig(({ command, mode }) => {
     VitePWA({
       registerType: 'autoUpdate',
       outDir: '../raven/public/raven_mobile',
+      srcDir: path.resolve(__dirname, 'src/'),
+      filename: 'serviceWorker.js',
+      strategies: 'injectManifest',
       workbox: {
         importScripts: [],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,ttf,woff,woff2}'],

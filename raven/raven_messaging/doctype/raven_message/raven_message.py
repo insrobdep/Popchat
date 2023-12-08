@@ -6,6 +6,8 @@ from frappe.model.document import Document
 from datetime import timedelta
 from frappe.query_builder.functions import Count, Coalesce
 from frappe.query_builder import Case
+from pywebpush import webpush, WebPushException
+import json
 
 
 class RavenMessage(Document):
@@ -62,6 +64,30 @@ class RavenMessage(Document):
     def after_insert(self):
         frappe.publish_realtime(
             'unread_channel_count_updated')
+        subscription_info = {
+            "endpoint": "https://fcm.googleapis.com/fcm/send/eBt9jYN6vy0:APA91bGm3pSlZ03S_A_vq6WxpyKZ0HvkljwVFYG5ZnWGsAQ_tEtFmhrAuy3N0n3wyZv50UwCnCmULjlFJbiHh1ouLInQTL2B0NZXQdThtLm6x8oIPB1l65IDAOxrMnH1kFOeacqZpjEQ",
+            "expirationTime": None,
+            "keys": {
+                "auth": "BpNmjV10x-Vh5djRV_Zxtg",
+                "p256dh": "BDJsx3XLTDjauxy8WxKKv3SiF9_l3iKfS7H1RicI4fao7B65kzEfK9nTkOTuJJdaGvyhdTTInkSQbg55pD2j8aA"
+            }
+        }
+        data = {
+            "title": "New Message",
+            "body": self.text,
+            "icon": "",
+            "actions": [
+                {
+                    "action": "open",
+                    "title": "Open"
+                }
+            ]
+        }
+        message = json.dumps(data)
+        vapid_private_key = 'QCTwDN0yLgj5eTPiAhkGWKZfjSxSATw3aQbcZYMKJX8'
+        vapid_claims = {"sub": "mailto:aditya.patil@thecommit.company"}
+        send_push_notification(subscription_info, message,
+                               vapid_private_key, vapid_claims)
 
     def after_delete(self):
         self.send_update_event(txt="delete")
@@ -73,7 +99,7 @@ class RavenMessage(Document):
         frappe.publish_realtime('message_updated', {
             'channel_id': self.channel_id,
             'sender': frappe.session.user,
-            }, after_commit=True)
+        }, after_commit=True)
         frappe.db.commit()
 
     def on_trash(self):
@@ -268,3 +294,18 @@ def get_unread_count_for_channels():
         'channels': channels_query
     }
     return result
+
+
+def send_push_notification(subscription_info, message_body, vapid_private_key, vapid_claims):
+    try:
+        webpush(
+            subscription_info=subscription_info,
+            data=message_body,
+            vapid_private_key=vapid_private_key,
+            vapid_claims=vapid_claims
+        )
+        print("Push notification sent successfully!")
+    except WebPushException as ex:
+        print("I'm sorry, but I wasn't able to process the push notification.", ex)
+        return False
+    return True

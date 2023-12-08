@@ -14,4 +14,6 @@ export interface RavenVAPID{
 	public_key: string
 	/**	Private Key : Password	*/
 	private_key: string
+	/**	Subject : Data	*/
+	subject: string
 }

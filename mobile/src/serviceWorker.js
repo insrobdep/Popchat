@@ -1,4 +1,5 @@
 self.addEventListener('push', function (e) {
+    console.log('push event')
     if (!(
         self.Notification &&
         self.Notification.permission === 'granted'
@@ -10,6 +11,7 @@ self.addEventListener('push', function (e) {
 
     if (e.data) {
         let message = e.data.json();
+        console.log('Push event! ', message);
         e.waitUntil(self.registration.showNotification(message.title, {
             body: message.body,
             icon: message.icon,

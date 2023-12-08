@@ -296,13 +296,13 @@ def get_unread_count_for_channels():
     return result
 
 
-def send_push_notification(subscription_info, message_body, vapid_private_key, vapid_claims):
+def send_push_notification(subscription_info, data, vapid_private_key, vapid_claims):
     try:
         webpush(
-            subscription_info=subscription_info,
-            data=message_body,
-            vapid_private_key=vapid_private_key,
-            vapid_claims=vapid_claims
+            subscription_info,
+            data,
+            vapid_private_key,
+            vapid_claims
         )
         print("Push notification sent successfully!")
     except WebPushException as ex:

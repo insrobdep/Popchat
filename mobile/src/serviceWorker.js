@@ -14,8 +14,6 @@ self.addEventListener('push', function (e) {
         console.log('Push event! ', message);
         e.waitUntil(self.registration.showNotification(message.title, {
             body: message.body,
-            icon: message.icon,
-            actions: message.actions
         }));
     }
 });

@@ -1,14 +1,15 @@
+import { ErrorBanner } from "@/components/layout"
 import { UserContext } from "@/utils/auth/UserProvider"
 import { urlB64ToUint8Array } from "@/utils/operations/operations"
 import { IonToggle, IonLabel } from "@ionic/react"
 import { useFrappeCreateDoc, useFrappeDeleteDoc, useFrappeGetDoc } from "frappe-react-sdk"
-import { useContext, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
 export const PushNotificationsToggle = () => {
 
     const { data, isLoading, error } = useFrappeGetDoc('Raven VAPID', 'Raven VAPID')
 
-    const [subscribed, setSubscribed] = useState(false)
+    const [subscription, setSubscription] = useState<PushSubscription | null>(null)
 
     const { createDoc } = useFrappeCreateDoc()
 
@@ -16,40 +17,52 @@ export const PushNotificationsToggle = () => {
 
     const { currentUser } = useContext(UserContext)
 
-    console.log(navigator.serviceWorker.controller)
+    useEffect(() => {
+        getPushSubscriptionStatus().then((subscription) => {
+            if (subscription) {
+                setSubscription(subscription)
+            }
+        })
+    }, [])
+
+    const getPushSubscriptionStatus = async () => {
+        const registration = await navigator.serviceWorker.getRegistration()
+        const subscription = await registration?.pushManager.getSubscription()
+        return subscription;
+    }
 
     const subscribeToPushNotifications = async () => {
-        const registration = await navigator.serviceWorker.getRegistration()
-        const subscribed = await registration?.pushManager.getSubscription()
-        if (subscribed) {
-            setSubscribed(true)
+
+        if (subscription) {
             console.info('User is already subscribed.')
-            return;
+            return
         }
-        const subscription = await registration?.pushManager.subscribe({
+
+        const registration = await navigator.serviceWorker.getRegistration()
+        const newSubscription = await registration?.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlB64ToUint8Array(data.public_key)
         })
-        console.log(subscription)
+        console.log(newSubscription)
         //save subscription details in frappe
         createDoc('Raven Push Subscription', {
-            name: subscription?.endpoint?.split('/')?.pop()?.split(':')[0],
+            name: newSubscription?.endpoint?.split('/')?.pop()?.split(':')[0],
             user: currentUser,
-            subscription_info: subscription?.toJSON(),
+            subscription_info: newSubscription?.toJSON(),
         }).then(() => {
-            setSubscribed(true)
+            if (newSubscription)
+                setSubscription(newSubscription)
             console.info('Successfully subscribed to push notifications.')
         })
     }
 
     const unsubscribeFromPushNotifications = async () => {
-        const registration = await navigator.serviceWorker.getRegistration()
-        const subscription = await registration?.pushManager.getSubscription()
+
         // remove subscription from frappe
         const unsubscribed = await subscription?.unsubscribe();
         if (unsubscribed) {
             deleteDoc('Raven Push Subscription', subscription?.endpoint?.split('/')?.pop()?.split(':')[0]).then(() => {
-                setSubscribed(false)
+                setSubscription(null)
                 console.info('Successfully unsubscribed from push notifications.')
             })
         }
@@ -78,8 +91,13 @@ export const PushNotificationsToggle = () => {
 
     return (
         <div className="w-full">
-            <IonToggle onIonChange={e => toggleNotifications(e.detail.checked)} disabled={Notification.permission != 'granted'} checked={subscribed} >Receive Push Notifications</IonToggle>
+            <IonToggle onIonChange={e => toggleNotifications(e.detail.checked)}
+                disabled={Notification.permission != 'granted' || isLoading || !!error}
+                checked={!!subscription} >
+                Receive Push Notifications
+            </IonToggle>
             {Notification.permission == 'denied' && <IonLabel className="ion-text-wrap font-light text-gray-500">You have denied notifications permission. Please enable it from your browser settings.</IonLabel>}
+            {error && <ErrorBanner error={error} />}
         </div>
     )
 }

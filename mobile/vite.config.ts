@@ -52,10 +52,14 @@ export default defineConfig(({ command, mode }) => {
       devOptions: {
         enabled: true,
       },
+      // injectManifest: {
+      //   injectionPoint: undefined
+      // },
       manifest: {
         name: "Raven",
         short_name: "Raven",
-        start_url: `/${env.VITE_BASE_NAME}`,
+        start_url: `/raven_mobile`,
+        scope: "/raven_mobile",
         description: "Raven",
         display: "standalone",
         theme_color: "#ffffff",

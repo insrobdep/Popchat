@@ -28,7 +28,7 @@ export const PushNotificationsToggle = () => {
     const getPushSubscriptionStatus = async () => {
         const registration = await navigator.serviceWorker.getRegistration()
         const subscription = await registration?.pushManager.getSubscription()
-        return subscription;
+        return subscription
     }
 
     const subscribeToPushNotifications = async () => {
@@ -38,7 +38,7 @@ export const PushNotificationsToggle = () => {
             return
         }
 
-        const registration = await navigator.serviceWorker.getRegistration()
+        const registration = await navigator.serviceWorker.getRegistration('/assets/raven/raven_mobile/')
         const newSubscription = await registration?.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlB64ToUint8Array(data.public_key)
@@ -56,6 +56,8 @@ export const PushNotificationsToggle = () => {
         })
     }
 
+    const isIPhone = navigator.userAgent.includes('iPhone')
+
     const unsubscribeFromPushNotifications = async () => {
 
         // remove subscription from frappe
@@ -70,19 +72,23 @@ export const PushNotificationsToggle = () => {
 
     const toggleNotifications = (checked: boolean) => {
         if (checked) {
-            Notification.requestPermission().then((permission) => {
-                switch (permission) {
-                    case 'granted':
-                        subscribeToPushNotifications()
-                        break
-                    case 'denied':
-                        alert('You have denied notifications permission. Please enable it from your browser settings.')
-                        break
-                    default:
-                        break
-                }
+            if (!isIPhone) {
+                Notification.requestPermission().then((permission) => {
+                    switch (permission) {
+                        case 'granted':
+                            subscribeToPushNotifications()
+                            break
+                        case 'denied':
+                            alert('You have denied notifications permission. Please enable it from your browser settings.')
+                            break
+                        default:
+                            break
+                    }
+                })
             }
-            )
+            else {
+                subscribeToPushNotifications()
+            }
         }
         else {
             unsubscribeFromPushNotifications()
@@ -92,11 +98,11 @@ export const PushNotificationsToggle = () => {
     return (
         <div className="w-full">
             <IonToggle onIonChange={e => toggleNotifications(e.detail.checked)}
-                disabled={Notification.permission != 'granted' || isLoading || !!error}
+                disabled={(Notification.permission != 'granted' && !isIPhone) || isLoading || !!error}
                 checked={!!subscription} >
                 Receive Push Notifications
             </IonToggle>
-            {Notification.permission == 'denied' && <IonLabel className="ion-text-wrap font-light text-gray-500">You have denied notifications permission. Please enable it from your browser settings.</IonLabel>}
+            {Notification.permission == 'denied' && !isIPhone && <IonLabel className="ion-text-wrap font-light text-gray-500">You have denied notifications permission. Please enable it from your browser settings.</IonLabel>}
             {error && <ErrorBanner error={error} />}
         </div>
     )

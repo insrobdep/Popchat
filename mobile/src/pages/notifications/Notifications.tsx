@@ -3,6 +3,8 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonList,
 
 export const Notifications = () => {
 
+    const isIPhone = navigator.userAgent.includes('iPhone')
+
     return (
         <IonPage>
             <IonHeader translucent>
@@ -17,9 +19,10 @@ export const Notifications = () => {
                     </IonItem>
                 </IonList>
                 <AllowNotificationsAlert />
+                {Notification.permission}
             </IonContent>
             <IonFooter>
-                {Notification.permission == 'default' && <IonButton className="justify-center" id='allow-notifications'>Allow Notifications</IonButton>}
+                {Notification.permission == 'default' && !isIPhone && <IonButton className="justify-center" id='allow-notifications'>Allow Notifications</IonButton>}
             </IonFooter>
         </IonPage>
     )

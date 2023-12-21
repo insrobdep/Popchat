@@ -4,6 +4,7 @@ import json
 
 
 def send_push_notification(user, data):
+    print("User", user)
     subscriptions = frappe.db.get_list('Raven Push Subscription', filters=[
         ['user', '=', user]], fields=['subscription_info'])
     print('subscriptions', subscriptions)

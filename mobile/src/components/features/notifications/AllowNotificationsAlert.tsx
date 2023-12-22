@@ -18,13 +18,12 @@ export const AllowNotificationsAlert = () => {
             message={'Please allow notifications permission to be able to receive push notifications.'}
             buttons={[
                 {
-                    text: 'No',
+                    text: 'Don\'t Allow',
                     role: 'cancel',
                 }
                 , {
-                    text: 'Yes',
+                    text: 'Allow',
                     role: 'confirm',
-                    cssClass: 'text-danger',
                     handler: getNotificationsPermission
                 }
             ]}

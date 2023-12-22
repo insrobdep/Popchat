@@ -1,9 +1,14 @@
 import { AllowNotificationsAlert, PushNotificationsToggle } from "@/components/features/notifications";
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonList, IonButton, IonFooter } from "@ionic/react"
+import { useDeviceInfo } from "@/hooks/useDeviceInfo";
 
 export const Notifications = () => {
 
     const isIPhone = navigator.userAgent.includes('iPhone')
+
+    const deviceInfo = useDeviceInfo()
+
+    console.log(deviceInfo)
 
     return (
         <IonPage>

@@ -4,9 +4,9 @@ import { useDeviceInfo } from "@/hooks/useDeviceInfo";
 
 export const Notifications = () => {
 
-    const isIPhone = navigator.userAgent.includes('iPhone')
-
     const deviceInfo = useDeviceInfo()
+
+    const isIPhone = deviceInfo?.platform == 'ios'
 
     console.log(deviceInfo)
 
@@ -24,10 +24,9 @@ export const Notifications = () => {
                     </IonItem>
                 </IonList>
                 <AllowNotificationsAlert />
-                {Notification.permission}
             </IonContent>
             <IonFooter>
-                {Notification.permission == 'default' && !isIPhone && <IonButton className="justify-center" id='allow-notifications'>Allow Notifications</IonButton>}
+                {Notification?.permission == 'default' && !isIPhone && <IonButton className="justify-center" id='allow-notifications'>Allow Notifications</IonButton>}
             </IonFooter>
         </IonPage>
     )

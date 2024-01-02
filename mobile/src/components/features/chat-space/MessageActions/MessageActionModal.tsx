@@ -14,6 +14,7 @@ import { SaveMessageAction } from './SaveMessageAction';
 import { NonContinuationMessageBlock } from '../chat-view/MessageBlock';
 import { useGetUser } from '@/hooks/useGetUser';
 import { ShareAction } from './ShareAction';
+import { SendEmailAction } from './SendEmailAction';
 
 interface MessageActionModalProps {
     selectedMessage?: MessageBlock,
@@ -82,6 +83,7 @@ export const MessageActionModal = ({ selectedMessage, onDismiss }: MessageAction
                             <IonLabel className='font-semibold'>Download</IonLabel>
                         </IonItem> */}
                         <SaveMessageAction message={selectedMessage} onSuccess={onDismiss} />
+                        {selectedMessage.block_type === 'message' && <SendEmailAction message={selectedMessage} onSuccess={onDismiss} />}
 
                         {isOwnMessage &&
                             <DeleteAction message={selectedMessage} onSuccess={onDismiss} />

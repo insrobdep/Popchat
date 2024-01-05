@@ -42,22 +42,24 @@ export const MessageBlockItem = ({ message, onMessageSelect }: Props) => {
     const longPressEvent = useLongPress(onLongPress)
     return (
         // @ts-ignore
-        <div className='px-2 my-0' id={`message-${message.data.name}`} {...longPressEvent}>
-            {message.data.is_continuation === 0 ? <NonContinuationMessageBlock message={message} user={user} /> :
-                <ContinuationMessageBlock message={message} />}
+        <div className='px-2 my-0' id={`message-${message.data.name}`}>
+            {message.data.is_continuation === 0 ? <NonContinuationMessageBlock message={message} user={user} longPressProps={longPressEvent} /> :
+                <ContinuationMessageBlock message={message} longPressProps={longPressEvent} />}
         </div>
     )
 }
 
-export const NonContinuationMessageBlock = ({ message, user }: { message: MessageBlock, user?: UserFields }) => {
+export const NonContinuationMessageBlock = ({ message, user, longPressProps }: { message: MessageBlock, user?: UserFields, longPressProps?: any }) => {
     return <div className='px-2 mt-3 pt-1 rounded-md flex active:bg-[color:var(--ion-color-light)]'>
         <UserAvatarBlock message={message} user={user} />
         <div>
-            <div className='flex items-end'>
-                <IonText className='font-black text-sm'>{user?.full_name ?? message.data.owner}</IonText>
-                <IonText className='text-xs pl-1.5 text-zinc-500'>{DateObjectToTimeString(message.data.creation)}</IonText>
+            <div {...longPressProps}>
+                <div className='flex items-end'>
+                    <IonText className='font-black text-sm'>{user?.full_name ?? message.data.owner}</IonText>
+                    <IonText className='text-xs pl-1.5 text-zinc-500'>{DateObjectToTimeString(message.data.creation)}</IonText>
+                </div>
+                <MessageContent message={message} />
             </div>
-            <MessageContent message={message} />
             {message.data.message_reactions && <div className='mt-1'>
                 <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={() => { }} />
             </div>}
@@ -73,11 +75,16 @@ const UserAvatarBlock = ({ message, user }: { message: MessageBlock, user?: User
     </div>
 }
 
-const ContinuationMessageBlock = ({ message }: { message: MessageBlock }) => {
+const ContinuationMessageBlock = ({ message, longPressProps }: { message: MessageBlock, longPressProps?: any }) => {
     return <div className='px-2 flex rounded-md  active:bg-[color:var(--ion-color-light)]'>
         <div className='w-11'>
         </div>
-        <MessageContent message={message} />
+        <div {...longPressProps}>
+            <MessageContent message={message} />
+        </div>
+        {message.data.message_reactions && <div className='mt-1'>
+            <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={() => { }} />
+        </div>}
     </div>
 }
 

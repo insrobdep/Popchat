@@ -83,12 +83,12 @@ export const ReactionButton = ({ reaction, onReactionClick, currentUser, allUser
 
     return (
         <IonButton
+            title={label}
             key={reaction.reaction}
             onClick={onClick}
-            fill={'outline'}
-            color='primary'
+            fill={'solid'}
+            color={currentUserReacted ? 'medium' : 'light'}
             size='small'
-        // className="w-12 text-sm"
         >
             {emoji} {reaction.count}
         </IonButton>

@@ -13,6 +13,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { useIsUserActive } from '@/hooks/useIsUserActive'
 import { useInView } from 'react-intersection-observer';
 import useLongPress from '@/hooks/useLongPress'
+import { MessageReactions } from './MessageReactions'
 
 type Props = {
     message: MessageBlock,
@@ -57,6 +58,9 @@ export const NonContinuationMessageBlock = ({ message, user }: { message: Messag
                 <IonText className='text-xs pl-1.5 text-zinc-500'>{DateObjectToTimeString(message.data.creation)}</IonText>
             </div>
             <MessageContent message={message} />
+            {message.data.message_reactions && <div className='mt-1'>
+                <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={() => { }} />
+            </div>}
         </div>
     </div>
 }

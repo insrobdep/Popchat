@@ -58,8 +58,8 @@ export default defineConfig(({ command, mode }) => {
       manifest: {
         name: "Raven",
         short_name: "Raven",
-        start_url: `/raven_mobile`,
-        scope: "/raven_mobile",
+        start_url: env.VITE_BASE_NAME ? `/${env.VITE_BASE_NAME}` : "",
+        scope: env.VITE_BASE_NAME ? `/${env.VITE_BASE_NAME}` : "",
         description: "Raven",
         display: "standalone",
         theme_color: "#ffffff",

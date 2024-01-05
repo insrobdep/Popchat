@@ -1,26 +1,26 @@
-import React, { memo, useContext, useMemo } from 'react'
-import { FileMessage, ImageMessage, Message, MessageBlock, TextMessage } from '../../../../../../types/Messaging/Message'
-import { ChannelMembersMap } from '../ChatInterface'
-import { IonIcon, IonItem, IonSkeletonText, IonText } from '@ionic/react'
-import { SquareAvatar, UserAvatar } from '@/components/common/UserAvatar'
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer'
-import { UserFields } from '@/utils/users/UserListProvider'
-import { DateObjectToFormattedDateString, DateObjectToFormattedDateStringWithoutYear, DateObjectToTimeString } from '@/utils/operations/operations'
-import { useFrappeGetCall, useFrappeGetDoc } from 'frappe-react-sdk'
-import { ChannelMembersContext } from './ChatView'
-import { openOutline } from 'ionicons/icons'
-import { Haptics, ImpactStyle } from '@capacitor/haptics'
+import { SquareAvatar } from '@/components/common/UserAvatar'
 import { useIsUserActive } from '@/hooks/useIsUserActive'
-import { useInView } from 'react-intersection-observer';
 import useLongPress from '@/hooks/useLongPress'
+import { DateObjectToFormattedDateStringWithoutYear, DateObjectToTimeString } from '@/utils/operations/operations'
+import { UserFields } from '@/utils/users/UserListProvider'
+import { Haptics, ImpactStyle } from '@capacitor/haptics'
+import { IonIcon, IonSkeletonText, IonText } from '@ionic/react'
+import { useFrappeGetCall } from 'frappe-react-sdk'
+import { openOutline } from 'ionicons/icons'
+import { useContext, useMemo } from 'react'
+import { useInView } from 'react-intersection-observer'
+import { FileMessage, ImageMessage, MessageBlock, TextMessage } from '../../../../../../types/Messaging/Message'
+import { ChannelMembersContext } from './ChatView'
 import { MessageReactions } from './MessageReactions'
 
 type Props = {
     message: MessageBlock,
     onMessageSelect: (message: MessageBlock) => void
+    refreshMessages: VoidFunction
 }
 
-export const MessageBlockItem = ({ message, onMessageSelect }: Props) => {
+export const MessageBlockItem = ({ message, onMessageSelect, refreshMessages }: Props) => {
     const members = useContext(ChannelMembersContext)
     /**
      * Displays a message block in the chat interface
@@ -43,13 +43,13 @@ export const MessageBlockItem = ({ message, onMessageSelect }: Props) => {
     return (
         // @ts-ignore
         <div className='px-2 my-0' id={`message-${message.data.name}`}>
-            {message.data.is_continuation === 0 ? <NonContinuationMessageBlock message={message} user={user} longPressProps={longPressEvent} /> :
-                <ContinuationMessageBlock message={message} longPressProps={longPressEvent} />}
+            {message.data.is_continuation === 0 ? <NonContinuationMessageBlock message={message} user={user} refreshMessages={refreshMessages} longPressProps={longPressEvent} /> :
+                <ContinuationMessageBlock message={message} refreshMessages={refreshMessages} longPressProps={longPressEvent} />}
         </div>
     )
 }
 
-export const NonContinuationMessageBlock = ({ message, user, longPressProps }: { message: MessageBlock, user?: UserFields, longPressProps?: any }) => {
+export const NonContinuationMessageBlock = ({ message, user, refreshMessages, longPressProps }: { message: MessageBlock, user?: UserFields, refreshMessages: VoidFunction, longPressProps?: any }) => {
     return <div className='px-2 mt-3 pt-1 rounded-md flex active:bg-[color:var(--ion-color-light)]'>
         <UserAvatarBlock message={message} user={user} />
         <div>
@@ -61,7 +61,7 @@ export const NonContinuationMessageBlock = ({ message, user, longPressProps }: {
                 <MessageContent message={message} />
             </div>
             {message.data.message_reactions && <div className='mt-1'>
-                <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={() => { }} />
+                <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={refreshMessages} />
             </div>}
         </div>
     </div>
@@ -75,7 +75,7 @@ const UserAvatarBlock = ({ message, user }: { message: MessageBlock, user?: User
     </div>
 }
 
-const ContinuationMessageBlock = ({ message, longPressProps }: { message: MessageBlock, longPressProps?: any }) => {
+const ContinuationMessageBlock = ({ message, refreshMessages, longPressProps }: { message: MessageBlock, refreshMessages: VoidFunction, longPressProps?: any }) => {
     return <div className='px-2 flex rounded-md  active:bg-[color:var(--ion-color-light)]'>
         <div className='w-11'>
         </div>
@@ -83,7 +83,7 @@ const ContinuationMessageBlock = ({ message, longPressProps }: { message: Messag
             <MessageContent message={message} />
         </div>
         {message.data.message_reactions && <div className='mt-1'>
-            <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={() => { }} />
+            <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={refreshMessages} />
         </div>}
     </div>
 }

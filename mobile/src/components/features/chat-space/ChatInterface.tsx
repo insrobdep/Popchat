@@ -1,18 +1,18 @@
+import { ChatLoader } from '@/components/layout/loaders/ChatLoader'
+import { UserContext } from '@/utils/auth/UserProvider'
+import { ChannelListItem, DMChannelListItem, useChannelList } from '@/utils/channel/ChannelListProvider'
+import { UserFields } from '@/utils/users/UserListProvider'
+import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonToolbar, useIonViewWillEnter } from '@ionic/react'
 import { useFrappeDocumentEventListener, useFrappeEventListener, useFrappeGetCall } from 'frappe-react-sdk'
+import { peopleOutline } from 'ionicons/icons'
 import { useCallback, useContext, useMemo, useRef } from 'react'
 import { MessagesWithDate } from '../../../../../types/Messaging/Message'
 import { ErrorBanner } from '../../layout'
 import { ChatInput } from '../chat-input'
-import { ChatView } from './chat-view/ChatView'
-import { ChatHeader } from './chat-header'
-import { ChannelListItem, DMChannelListItem, useChannelList } from '@/utils/channel/ChannelListProvider'
-import { UserFields } from '@/utils/users/UserListProvider'
-import { peopleOutline } from 'ionicons/icons'
-import { Haptics, ImpactStyle } from '@capacitor/haptics'
-import { UserContext } from '@/utils/auth/UserProvider'
-import { ChatLoader } from '@/components/layout/loaders/ChatLoader'
 import { MessageActionModal, useMessageActionModal } from './MessageActions/MessageActionModal'
+import { ChatHeader } from './chat-header'
+import { ChatView } from './chat-view/ChatView'
 
 export type ChannelMembersMap = Record<string, UserFields>
 
@@ -136,7 +136,7 @@ export const ChatInterface = ({ channel }: { channel: ChannelListItem | DMChanne
             <IonContent className='flex flex-col-reverse' fullscreen ref={conRef}>
                 {isMessageLoading && <ChatLoader />}
                 {messagesError && <ErrorBanner error={messagesError} />}
-                <ChatView messages={messages?.message ?? []} members={channelMembers?.message ?? {}} onMessageSelected={onMessageSelected} />
+                <ChatView messages={messages?.message ?? []} members={channelMembers?.message ?? {}} onMessageSelected={onMessageSelected} refreshMessages={refreshMessages} />
 
                 {/* Commented out the button because it was unreliable. We only scroll to bottom when the user is at the bottom. */}
                 {/* <IonButton

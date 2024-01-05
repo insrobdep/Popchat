@@ -2,7 +2,7 @@ import { ErrorBanner } from "@/components/layout"
 import { useDeviceInfo } from "@/hooks/useDeviceInfo"
 import { UserContext } from "@/utils/auth/UserProvider"
 import { urlB64ToUint8Array } from "@/utils/operations/operations"
-import { IonToggle, IonLabel } from "@ionic/react"
+import { IonToggle } from "@ionic/react"
 import { useFrappeCreateDoc, useFrappeDeleteDoc, useFrappeGetDoc } from "frappe-react-sdk"
 import { useContext, useEffect, useState } from "react"
 
@@ -59,7 +59,7 @@ export const PushNotificationsToggle = () => {
 
     const deviceInfo = useDeviceInfo()
 
-    const isIPhone = deviceInfo?.platform == 'ios'
+    const isIPhone = deviceInfo?.operatingSystem === "ios" && deviceInfo.manufacturer == "Apple Computer, Inc."
 
     const unsubscribeFromPushNotifications = async () => {
 
@@ -101,11 +101,10 @@ export const PushNotificationsToggle = () => {
     return (
         <div className="w-full">
             <IonToggle onIonChange={e => toggleNotifications(e.detail.checked)}
-                disabled={(Notification?.permission != 'granted' && !isIPhone) || isLoading || !!error}
+                disabled={(!isIPhone && Notification?.permission != 'granted') || isLoading || !!error}
                 checked={!!subscription} >
                 Receive Push Notifications
             </IonToggle>
-            {Notification?.permission == 'denied' && !isIPhone && <IonLabel className="ion-text-wrap font-light text-gray-500">You have denied notifications permission. Please enable it from your browser settings.</IonLabel>}
             {error && <ErrorBanner error={error} />}
         </div>
     )

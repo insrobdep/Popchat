@@ -12,7 +12,8 @@ app_license = "AGPLv3"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/raven/css/raven.css"
-# app_include_js = "/assets/raven/js/raven.js"
+# app_include_js = "/assets/raven/js/raven.js"                 ]
+app_include_js = "raven.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/raven/css/raven.css"
@@ -71,7 +72,7 @@ after_install = "raven.install.after_install"
 # ------------
 
 # before_uninstall = "raven.uninstall.before_uninstall"
-# after_uninstall = "raven.uninstall.after_uninstall"
+after_uninstall = "raven.uninstall.after_uninstall"
 
 # Desk Notifications
 # ------------------
@@ -105,7 +106,8 @@ after_install = "raven.install.after_install"
 
 doc_events = {
     "User": {
-        "validate": "raven.raven.doctype.raven_user.raven_user.validate_raven_user_role",
+        "after_insert": "raven.raven.doctype.raven_user.raven_user.add_user_to_raven",
+        "on_update": "raven.raven.doctype.raven_user.raven_user.add_user_to_raven",
     }
 }
 
@@ -190,9 +192,18 @@ doc_events = {
 # "raven.auth.validate"
 # ]
 
+additional_timeline_content = {
+    "*": ['raven.raven_messaging.doctype.raven_message.raven_message.get_timeline_message_content']
+}
+
 website_route_rules = [
     {'from_route': '/raven/<path:app_path>', 'to_route': 'raven'},
     {'from_route': '/raven_mobile/<path:app_path>', 'to_route': 'raven_mobile'}, ]
+
+permission_query_conditions = {
+    "Raven Channel": "raven.permissions.raven_channel_query",
+    "Raven Message": "raven.permissions.raven_message_query",
+}
 
 has_permission = {
     "Raven Channel": "raven.permissions.channel_has_permission",

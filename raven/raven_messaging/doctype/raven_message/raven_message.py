@@ -5,8 +5,15 @@ from frappe import _
 from frappe.model.document import Document
 from datetime import timedelta
 from frappe.query_builder.functions import Count, Coalesce
-from frappe.query_builder import Case
 from raven.raven_notification.send_notification import send_push_notification
+from frappe.query_builder import Case, Order, JoinType
+from collections.abc import Iterable
+import json
+from raven.raven_channel_management.doctype.raven_channel.raven_channel import get_peer_user_id
+channel = frappe.qb.DocType("Raven Channel")
+channel_member = frappe.qb.DocType("Raven Channel Member")
+message = frappe.qb.DocType('Raven Message')
+user = frappe.qb.DocType("User")
 
 
 class RavenMessage(Document):
@@ -25,6 +32,8 @@ class RavenMessage(Document):
         image_width: DF.Data | None
         is_reply: DF.Check
         json: DF.JSON | None
+        link_doctype: DF.Link | None
+        link_document: DF.DynamicLink | None
         linked_message: DF.Link | None
         message_reactions: DF.JSON | None
         message_type: DF.Literal["Text", "Image", "File"]
@@ -39,7 +48,7 @@ class RavenMessage(Document):
         2. If the channel is private/public, the user creating the message should be a member of the channel
         3. If there is a linked message, the linked message should be in the same channel
         '''
-        self.validate_membership()
+        # self.validate_membership()
         self.validate_linked_message()
 
     def validate_membership(self):
@@ -62,7 +71,9 @@ class RavenMessage(Document):
 
     def after_insert(self):
         frappe.publish_realtime(
-            'unread_channel_count_updated')
+            'raven:unread_channel_count_updated', {
+                'channel_id': self.channel_id,
+            })
 
         data = {
             "title": "New Message",
@@ -76,16 +87,22 @@ class RavenMessage(Document):
             send_push_notification(member, data)
 
     def after_delete(self):
-        self.send_update_event(txt="delete")
+        self.send_update_event(type="delete")
 
     def on_update(self):
-        self.send_update_event(txt="update")
+        self.send_update_event(type="update")
 
-    def send_update_event(self, txt):
+    def send_update_event(self, type):
         frappe.publish_realtime('message_updated', {
             'channel_id': self.channel_id,
             'sender': frappe.session.user,
-        }, after_commit=True)
+            'message_id': self.name,
+            'type': type,
+        },
+            doctype='Raven Channel',
+            # Adding this to automatically add the room for the event via Frappe
+            docname=self.channel_id,
+            after_commit=True)
         frappe.db.commit()
 
     def on_trash(self):
@@ -95,6 +112,15 @@ class RavenMessage(Document):
     def before_save(self):
         if frappe.db.get_value('Raven Channel', self.channel_id, 'type') != 'Private' or frappe.db.exists("Raven Channel Member", {"channel_id": self.channel_id, "user_id": frappe.session.user}):
             track_visit(self.channel_id)
+
+
+def on_doctype_update():
+    '''
+    Add indexes to Raven Message table
+    '''
+    # Index the selector (channel or message type) first for faster queries (less rows to sort in the next step)
+    frappe.db.add_index("Raven Message", ["channel_id", "creation"])
+    frappe.db.add_index("Raven Message", ["message_type", "creation"])
 
 
 def track_visit(channel_id, commit=False):
@@ -114,7 +140,11 @@ def track_visit(channel_id, commit=False):
             "user_id": frappe.session.user,
             "last_visit": frappe.utils.now()
         }).insert()
-    # Need to comit the changes to the database if the request is a GET request
+    frappe.publish_realtime(
+        'raven:unread_channel_count_updated', {
+            'channel_id': channel_id,
+        }, after_commit=True)
+    # Need to commit the changes to the database if the request is a GET request
     if commit:
         frappe.db.commit()
 
@@ -150,43 +180,63 @@ def send_message(channel_id, text, is_reply, linked_message=None, json=None):
 
 @frappe.whitelist()
 def fetch_recent_files(channel_id):
-
-    files = frappe.db.get_list('Raven Message',
-                               filters={
-                                   'channel_id': channel_id,
-                                   'message_type': ['in', ['Image', 'File']]
-                               },
-                               fields=['name', 'file', 'owner',
-                                       'creation', 'message_type'],
-                               order_by='creation desc',
-                               limit_page_length=10
-                               )
+    '''
+     Fetches recently sent files in a channel
+     Check if the user has permission to view the channel
+    '''
+    if not frappe.has_permission("Raven Channel", doc=channel_id):
+        frappe.throw(
+            "You don't have permission to view this channel", frappe.PermissionError)
+    files = frappe.db.get_all('Raven Message',
+                              filters={
+                                  'channel_id': channel_id,
+                                  'message_type': ['in', ['Image', 'File']]
+                              },
+                              fields=['name', 'file', 'owner',
+                                      'creation', 'message_type'],
+                              order_by='creation desc',
+                              limit_page_length=10
+                              )
 
     return files
 
 
 def get_messages(channel_id):
 
-    messages = frappe.db.get_list('Raven Message',
-                                  filters={'channel_id': channel_id},
-                                  fields=['name', 'owner', 'creation', 'text',
-                                          'file', 'message_type', 'message_reactions', 'is_reply', 'linked_message', '_liked_by', 'channel_id', 'thumbnail_width', 'thumbnail_height', 'file_thumbnail'],
-                                  order_by='creation asc'
-                                  )
+    messages = frappe.db.get_all('Raven Message',
+                                 filters={'channel_id': channel_id},
+                                 fields=['name', 'owner', 'creation', 'text',
+                                         'file', 'message_type', 'message_reactions', 'is_reply', 'linked_message', '_liked_by', 'channel_id', 'thumbnail_width', 'thumbnail_height', 'file_thumbnail', 'link_doctype', 'link_document'],
+                                 order_by='creation asc'
+                                 )
 
     return messages
 
 
 @frappe.whitelist()
 def get_saved_messages():
+    '''
+        Fetches list of all messages liked by the user
+        Check if the user has permission to view the message
+    '''
 
-    messages = frappe.db.get_list('Raven Message',
-                                  filters={'_liked_by': [
-                                      'like', '%'+frappe.session.user+'%']},
-                                  fields=['name', 'owner', 'creation', 'text', 'channel_id',
-                                          'file', 'message_type', 'message_reactions', '_liked_by'],
-                                  order_by='creation asc'
-                                  )
+    raven_message = frappe.qb.DocType('Raven Message')
+    raven_channel = frappe.qb.DocType('Raven Channel')
+    raven_channel_member = frappe.qb.DocType('Raven Channel Member')
+
+    query = (frappe.qb.from_(raven_message)
+             .join(raven_channel, JoinType.left)
+             .on(raven_message.channel_id == raven_channel.name)
+             .join(raven_channel_member, JoinType.left)
+             .on(raven_channel.name == raven_channel_member.channel_id)
+             .select(raven_message.name, raven_message.owner, raven_message.creation, raven_message.text, raven_message.channel_id,
+                     raven_message.file, raven_message.message_type, raven_message.message_reactions, raven_message._liked_by)
+             .where(raven_message._liked_by.like('%'+frappe.session.user+'%'))
+             .where((raven_channel.type.isin(['Open', 'Public'])) | (raven_channel_member.user_id == frappe.session.user))
+             .orderby(raven_message.creation, order=Order.asc)
+             .distinct())  # Add DISTINCT keyword to retrieve only unique messages
+
+    messages = query.run(as_dict=True)
 
     return messages
 
@@ -280,3 +330,36 @@ def get_unread_count_for_channels():
         'channels': channels_query
     }
     return result
+
+
+@frappe.whitelist()
+def get_timeline_message_content(doctype, docname):
+
+    query = (frappe.qb.from_(message)
+             .select(message.creation, message.owner, message.name, message.text, message.file, channel.name.as_('channel_id'), channel.channel_name, channel.type, channel.is_direct_message, user.full_name, channel.is_self_message)
+             .join(channel).on(message.channel_id == channel.name)
+             .join(channel_member).on((message.channel_id == channel_member.channel_id) & (message.owner == channel_member.user_id))
+             .join(user).on(message.owner == user.name)
+             .where((channel.type != "Private") | (channel_member.user_id == frappe.session.user))
+             .where(message.link_doctype == doctype)
+             .where(message.link_document == docname))
+    data = query.run(as_dict=True)
+
+    timeline_contents = []
+    for log in data:
+
+        if log.is_direct_message:
+            peer_user_id = get_peer_user_id(
+                log.channel_id, log.is_direct_message, log.is_self_message)
+            if peer_user_id:
+                log['peer_user'] = frappe.db.get_value(
+                    "User", peer_user_id, "full_name")
+        timeline_contents.append({
+            "icon": "share",
+            "is_card": True,
+            "creation": log.creation,
+            "template": "send_message",
+            "template_data": log
+        })
+
+    return timeline_contents

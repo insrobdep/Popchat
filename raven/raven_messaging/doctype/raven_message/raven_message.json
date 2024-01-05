@@ -20,7 +20,9 @@
   "thumbnail_height",
   "message_reactions",
   "is_reply",
-  "linked_message"
+  "linked_message",
+  "link_doctype",
+  "link_document"
  ],
  "fields": [
   {
@@ -30,7 +32,8 @@
    "in_standard_filter": 1,
    "label": "Channel ID",
    "options": "Raven Channel",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "text",
@@ -94,11 +97,23 @@
    "fieldname": "thumbnail_height",
    "fieldtype": "Data",
    "label": "Thumbnail Height"
+  },
+  {
+   "fieldname": "link_doctype",
+   "fieldtype": "Link",
+   "label": "Link Doctype",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "link_document",
+   "fieldtype": "Dynamic Link",
+   "label": "Link Document",
+   "options": "link_doctype"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-10-27 15:39:27.926205",
+ "modified": "2023-12-22 18:25:02.237368",
  "modified_by": "Administrator",
  "module": "Raven Messaging",
  "name": "Raven Message",
@@ -125,17 +140,14 @@
    "export": 1,
    "if_owner": 1,
    "print": 1,
-   "read": 1,
    "report": 1,
    "role": "Raven User",
-   "select": 1,
    "share": 1,
    "write": 1
   },
   {
    "read": 1,
-   "role": "Raven User",
-   "select": 1
+   "role": "Raven User"
   }
  ],
  "search_fields": "text",

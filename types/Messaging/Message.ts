@@ -1,4 +1,4 @@
-export type Message = FileMessage | TextMessage
+export type Message = FileMessage | TextMessage | ImageMessage
 
 export interface BaseMessage {
     name: string,
@@ -11,14 +11,23 @@ export interface BaseMessage {
     is_continuation: 1 | 0
     is_reply: 1 | 0
     linked_message?: string | null
+    link_doctype?: string
+    link_document?: string
 }
 
 export interface FileMessage extends BaseMessage {
+    text: string,
     file: string,
-    message_type: 'File' | 'Image'
-    thumbnail_width: number,
-    thumbnail_height: number,
-    file_thumbnail?: string,
+    message_type: 'File'
+}
+
+export interface ImageMessage extends BaseMessage {
+    text: string,
+    file: string,
+    message_type: 'Image'
+    thumbnail_width?: number,
+    thumbnail_height?: number,
+    image_thumbnail?: string,
 }
 
 export interface TextMessage extends BaseMessage {

@@ -1,9 +1,10 @@
-import { IonButton, IonContent, IonHeader, IonInput, IonItem, IonItemDivider, IonLabel, IonList, IonModal, IonTitle, IonToolbar } from '@ionic/react'
+import { IonButton, IonContent, IonHeader, IonInput, IonItem, IonItemDivider, IonLabel, IonList, IonModal, IonText, IonTitle, IonToolbar } from '@ionic/react'
 import { useFrappePostCall } from 'frappe-react-sdk'
 import React, { useRef } from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { IoArrowUpCircleOutline } from 'react-icons/io5'
-import { MessageBlock } from '../../../../../../types/Messaging/Message'
+import { MessageBlock, TextMessage } from '../../../../../../types/Messaging/Message'
+import { EmailEditor } from './EmailEditor'
 
 export type Email = {
     recipients: string,
@@ -44,24 +45,25 @@ export const MessageEmailDrawer = ({ isOpen, onDismiss, message, onSuccess }: Em
 
     const onSubmit = (data: Email) => {
 
-        call({
-            recipients: data.recipients,
-            subject: data.subject,
-            content: data.content,
-            doctype: data.doctype,
-            name: data.name,
-            send_me_a_copy: data.send_me_a_copy,
-            read_receipt: data.read_receipt,
-            send_email: 1,
-            print_html: data.print_html,
-            print_format: 'Standard',
-            _lang: data._lang,
-            print_letterhead: 1,
-        }).then(res => {
-            reset()
-            onDismiss()
-            onSuccess()
-        })
+        console.log(data)
+        // call({
+        //     recipients: data.recipients,
+        //     subject: data.subject,
+        //     content: data.content,
+        //     doctype: data.doctype,
+        //     name: data.name,
+        //     send_me_a_copy: data.send_me_a_copy,
+        //     read_receipt: data.read_receipt,
+        //     send_email: 1,
+        //     print_html: data.print_html,
+        //     print_format: 'Standard',
+        //     _lang: data._lang,
+        //     print_letterhead: 1,
+        // }).then(res => {
+        //     reset()
+        //     onDismiss()
+        //     onSuccess()
+        // })
     }
 
     return (
@@ -70,18 +72,21 @@ export const MessageEmailDrawer = ({ isOpen, onDismiss, message, onSuccess }: Em
                 <IonModal
                     ref={modal}
                     isOpen={isOpen}
-                    onDidDismiss={onDismiss}
+                    // onWillDismiss={onDismiss}
+                    onDidDismiss={modal.current?.dismiss}
                     initialBreakpoint={0.95}
                 >
                     <IonHeader>
                         <IonToolbar>
-                            <IonButton slot='start' onClick={onDismiss} fill='clear'>Cancel</IonButton>
-                            <IonTitle>{watch('subject') ?? "New Message"}</IonTitle>
-                            <IonButton slot='end' fill='clear' type='submit'><IoArrowUpCircleOutline fontSize='25px' /></IonButton>
+                            <IonButton slot='start' className='p-0' onClick={() => modal.current?.dismiss()} fill='clear'>Cancel</IonButton>
                         </IonToolbar>
                     </IonHeader>
                     <IonContent>
-                        <EmailForm message={message} />
+                        <div className='flex items-center justify-between ps-4'>
+                            <IonText class='text-xl font-semibold'>{watch('subject') ?? "New Message"}</IonText>
+                            <IonButton fill='clear' type='submit' onClick={handleSubmit(onSubmit)}><IoArrowUpCircleOutline fontSize='25px' /></IonButton>
+                        </div>
+                        <EmailForm message={message} loading={false} onDismiss={onDismiss}/>
                     </IonContent>
                 </IonModal>
             </form>
@@ -89,9 +94,11 @@ export const MessageEmailDrawer = ({ isOpen, onDismiss, message, onSuccess }: Em
     )
 }
 
-const EmailForm = ({ message }: { message: MessageBlock }) => {
+const EmailForm = ({ message, loading, onDismiss }: { message: MessageBlock, loading: boolean, onDismiss: VoidFunction }) => {
 
-    const { register } = useFormContext()
+    const { register, watch } = useFormContext()
+    
+    const data = message.data as TextMessage
 
     return (
         <IonList lines='full'>
@@ -103,8 +110,9 @@ const EmailForm = ({ message }: { message: MessageBlock }) => {
                 <IonLabel>Subject</IonLabel>
                 <IonInput {...register('subject')} clearInput />
             </IonItem>
+            <IonButton onClick={onDismiss}>Close</IonButton>
             <IonItem>
-                
+                <EmailEditor messageSending={loading} defaultText={data?.text ?? ''} />
             </IonItem>
         </IonList>
     )

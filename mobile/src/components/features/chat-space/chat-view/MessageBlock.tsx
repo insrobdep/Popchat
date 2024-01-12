@@ -50,16 +50,18 @@ export const MessageBlockItem = ({ message, onMessageSelect, refreshMessages }: 
 }
 
 export const NonContinuationMessageBlock = ({ message, user, refreshMessages, longPressProps }: { message: MessageBlock, user?: UserFields, refreshMessages: VoidFunction, longPressProps?: any }) => {
-    return <div className='px-2 mt-3 pt-1 rounded-md flex active:bg-[color:var(--ion-color-light)]'>
-        <UserAvatarBlock message={message} user={user} />
-        <div>
-            <div {...longPressProps}>
+    return <div>
+        <div className='px-2 mt-3 pt-1 rounded-md flex active:bg-[color:var(--ion-color-light)]' {...longPressProps}>
+            <UserAvatarBlock message={message} user={user} />
+            <div>
                 <div className='flex items-end'>
                     <IonText className='font-black text-sm'>{user?.full_name ?? message.data.owner}</IonText>
                     <IonText className='text-xs pl-1.5 text-zinc-500'>{DateObjectToTimeString(message.data.creation)}</IonText>
                 </div>
                 <MessageContent message={message} />
             </div>
+        </div>
+        <div className='ml-11'>
             {message.data.message_reactions && <div className='mt-1'>
                 <MessageReactions messageID={message.data.name} message_reactions={message.data.message_reactions} updateMessages={refreshMessages} />
             </div>}

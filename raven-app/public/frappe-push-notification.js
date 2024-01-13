@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
     getMessaging,
     getToken,
@@ -73,7 +73,6 @@ class FrappePushNotification {
      */
     async appendConfigToServiceWorkerURL(url, parameter_name = "config") {
         let config = await this.fetchWebConfig();
-
         const encode_config = encodeURIComponent(JSON.stringify(config));
         return `${url}?${parameter_name}=${encode_config}`;
     }
@@ -138,7 +137,7 @@ class FrappePushNotification {
      * @returns {boolean}
      */
     isNotificationEnabled() {
-        return localStorage.getItem('firebase_token') !== null;
+        return localStorage.getItem(`firebase_token_${this.projectName}`) !== null;
     }
 
     /**
@@ -167,7 +166,7 @@ class FrappePushNotification {
             };
         }
         // check in local storage for old token
-        let oldToken = localStorage.getItem('firebase_token');
+        let oldToken = localStorage.getItem(`firebase_token_${this.projectName}`);
         let newToken = await getToken(this.messaging, {
             vapidKey: await this.fetchVapidPublicKey(),
             serviceWorkerRegistration: this.serviceWorkerRegistration,
@@ -184,7 +183,7 @@ class FrappePushNotification {
                 throw new Error("Failed to subscribe to push notification");
             }
             // save token to local storage
-            localStorage.setItem('firebase_token', newToken);
+            localStorage.setItem(`firebase_token_${this.projectName}`, newToken);
         }
         this.token = newToken;
         return {
@@ -202,7 +201,7 @@ class FrappePushNotification {
     async disableNotification() {
         if (this.token == null) {
             // try to fetch token from local storage
-            this.token = localStorage.getItem('firebase_token');
+            this.token = localStorage.getItem(`firebase_token_${this.projectName}`);
             if (this.token == null || this.token === "") {
                 return;
             }
@@ -221,7 +220,7 @@ class FrappePushNotification {
             console.error(e);
         }
         // remove token
-        localStorage.removeItem('firebase_token');
+        localStorage.removeItem(`firebase_token_${this.projectName}`);
         this.token = null;
     }
 
@@ -233,7 +232,7 @@ class FrappePushNotification {
      */
     async registerTokenHandler(token) {
         try {
-            let response = await fetch("/api/method/frappe.push_notification.subscribe?fcm_token=" + token, {
+            let response = await fetch("/api/method/frappe.push_notification.subscribe?fcm_token=" + token + "&project_name=" + this.projectName, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -254,7 +253,7 @@ class FrappePushNotification {
      */
     async unregisterTokenHandler(token) {
         try {
-            let response = await fetch("/api/method/frappe.push_notification.unsubscribe?fcm_token=" + token, {
+            let response = await fetch("/api/method/frappe.push_notification.unsubscribe?fcm_token=" + token + "&project_name=" + this.projectName, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

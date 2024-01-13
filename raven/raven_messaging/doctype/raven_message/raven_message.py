@@ -82,7 +82,6 @@ class RavenMessage(Document):
     def send_notification(self):
         try:
             # TODO: Extend this for all channel types
-            if frappe.db.get_value('Raven Channel', self.channel_id, 'type') == 'Open':
                 raven_users = frappe.db.get_all('Raven Channel Member', filters={
                     'channel_id': self.channel_id,
                     # TODO: Add this to avoid self notifications

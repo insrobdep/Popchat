@@ -18,4 +18,6 @@ export interface RavenUser{
 	first_name?: string
 	/**	User Image : Attach Image	*/
 	user_image?: string
+	/**	Enabled : Check	*/
+	enabled?: 0 | 1
 }

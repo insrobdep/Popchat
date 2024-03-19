@@ -7,6 +7,8 @@ from raven.api.raven_message import track_visit
 from frappe.core.utils import html2text
 import datetime
 
+import requests
+import json
 
 class RavenMessage(Document):
     # begin: auto-generated types
@@ -61,6 +63,22 @@ class RavenMessage(Document):
         1. If there is a linked message, the linked message should be in the same channel
         '''
         self.validate_linked_message()
+        self.webhook_actions()
+        
+    def webhook_actions(self):
+        nr_baseurl = frappe.get_doc("Pop Settings").nodered_url
+        url = nr_baseurl + "/raven_new_message"
+
+        data = json.dumps(self)
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Basic SVJEX25vZGVyZWQ6SVJEX21vc3RzZWN1cmVwYXNzd29yZGV2ZXI=",
+        }
+
+        result = requests.post(url, data=json.dumps(data), headers=headers)
+        chat_id = json.loads(result.text)["chat_id"]
+       
 
     def validate_linked_message(self):
         '''

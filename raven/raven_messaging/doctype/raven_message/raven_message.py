@@ -77,7 +77,7 @@ class RavenMessage(Document):
         }
 
         result = requests.post(url, data=json.dumps(data), headers=headers)
-        chat_id = json.loads(result.text)["chat_id"]
+        #chat_id = json.loads(result.text)["chat_id"]
        
 
     def validate_linked_message(self):

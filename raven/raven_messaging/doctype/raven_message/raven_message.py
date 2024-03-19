@@ -69,8 +69,8 @@ class RavenMessage(Document):
         nr_baseurl = frappe.get_doc("Pop Settings").nodered_url
         url = nr_baseurl + "/raven_new_message"
 
-        data = json.dumps(self)
-        
+        data = self.as_dict()
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Basic SVJEX25vZGVyZWQ6SVJEX21vc3RzZWN1cmVwYXNzd29yZGV2ZXI=",
